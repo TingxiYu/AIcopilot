@@ -1,0 +1,102 @@
+version = 2
+template = "deepagents/research"
+name = "AIcopilot"
+description = "DeepAgents research application with Tavily-backed web research and a browser frontend."
+env_file = ".env"
+guide = "README.md"
+
+[env.SEEKDB_EMBED]
+required = true
+default = "true"
+description = "Use embedded AgentSeek API checkpoint persistence."
+
+[env.SEEKDB_EMBED_DIR]
+required = true
+default = "~/.agentseek/aicopilot/seekdb"
+description = "Embedded AgentSeek API persistence directory."
+
+[env.OCEANBASE_DB_NAME]
+required = true
+default = "test"
+description = "Embedded AgentSeek API database name."
+
+[tools]
+required = ["uv", "node", "npm"]
+
+[paths]
+required = ["pyproject.toml", "langgraph.json", "frontend/package.json", "frontend/node_modules"]
+
+[env.AGENTSEEK_MODEL_PROVIDER]
+required = true
+default = "openai"
+description = "LangChain model provider used by the research graph."
+
+[env.AGENTSEEK_MODEL]
+required = true
+default = "deepseek-v4-flash"
+description = "Model id used by the research graph."
+aliases = ["DEEPAGENTS_MODEL", "BUB_MODEL"]
+
+[env.OPENAI_API_KEY]
+required = true
+description = "Credential for the selected model provider."
+aliases = ["ANTHROPIC_API_KEY", "GOOGLE_API_KEY", "BUB_OPENAI_API_KEY"]
+
+[env.TAVILY_API_KEY]
+required = true
+description = "Tavily search API key used by tavily_search."
+
+[env.LANGCHAIN_OPENAI_STREAM_CHUNK_TIMEOUT_S]
+required = false
+default = "300"
+description = "OpenAI stream chunk gap timeout in seconds."
+
+[services.langgraph]
+name = "AgentSeek API"
+url = "http://127.0.0.1:2026"
+tech = "agentseek-api"
+kind = "api"
+display = "advanced"
+primary = false
+description = "AgentSeek API runtime that runs the DeepAgents research graph."
+links = { docs = "https://docs.langchain.com/oss/python/langgraph/overview", api_docs = "http://127.0.0.1:2026/docs", studio = "https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2026" }
+
+[services.frontend]
+name = "Research application"
+url = "http://127.0.0.1:1996"
+kind = "web"
+display = "default"
+primary = true
+description = "AIcopilot research application: thread sidebar, streamed conversation, and an artifact panel with the report, its citations and todo progress."
+tech = "vite"
+links = { docs = "https://docs.langchain.com/oss/python/deepagents/frontend/overview" }
+
+[processes.langgraph]
+# --host 0.0.0.0 so the browser can reach VITE_LANGGRAPH_API_URL=http://10.37.30.69:2026.
+command = ["uv", "run", "agentseek-api", "serve", "--host", "0.0.0.0", "--port", "2026"]
+
+[processes.frontend]
+command = ["npm", "run", "dev"]
+cwd = "frontend"
+
+[checks.langgraph]
+type = "http"
+target = "http://127.0.0.1:2026/health"
+service = "langgraph"
+timeout = 2
+attempts = 3
+
+[checks.frontend]
+type = "http"
+target = "http://127.0.0.1:1996"
+service = "frontend"
+timeout = 2
+attempts = 3
+
+[tasks.sync]
+description = "Install Python dependencies with uv."
+command = ["uv", "sync"]
+
+[tasks.frontend]
+description = "Install frontend dependencies."
+command = ["npm", "install", "--prefix", "frontend"]
