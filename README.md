@@ -76,8 +76,4 @@ npm test
 npm run build
 ```
 
-`npm test` 包含真实后端的契约测试，运行前请先启动服务。源码位置：后端在 `src/aicopilot/`，前端在 `frontend/src/`，服务配置在 `.agentseek/lifecycle.toml`。
-
-## 发布前注意
-
-提交前使用 `git status --short` 核对文件列表。`.env`、`frontend/.env`、依赖目录、运行数据和研究计划均不应提交；示例配置文件 `.env.example` 可以提交，但不要把真实密钥写进去。
+`npm test` 包含真实后端的契约测试，运行前请先启动服务。源码位置：后端在 `src/aicopilot/`，前端在 `frontend/src/`，服务配置在 `.agentseek/lifecycle.toml`
